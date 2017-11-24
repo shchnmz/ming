@@ -8,22 +8,29 @@ ming800-to-redis是一个用来把当前学期中课程，学生信息从明日�
 
 #### 同步后的redis中的keys
 * 所有校区
-  key: `"campuses"`, type: ordered set, value: 校区.
+  key: `"campuses"`, type: ordered set, value: 校区, score: timestamp.
 
 * 校区对应的课程
-  key: `$CAMPUS:categories`, type: ordered set, value: 课程.
+  key: `$CAMPUS:categories`, type: ordered set, value: 课程, score: timestamp.
 
 * 课程对应的校区
-  key: `$CATEGORY:classes`, type: ordered set, value: 校区.
+  key: `$CATEGORY:classes`, type: ordered set, value: 校区, score: timestamp.
+
+* 所有教师
+  key: `"teachers"`, type: ordered set, value: 教师, score: timestamp.
 
 * 班级对应的教师
-  key: `$CAMPUS:$CATEGORY:$CLASS:teachers`, type: ordered set, value: 校区.
+  key: `$CAMPUS:$CATEGORY:$CLASS:teachers`, type: ordered set, value: 校区, score: timestamp.
+
+* 教师对应的班级
+  key: `$TEACHER:classes`, type: ordered set, value: 班级, score: timestamp.
 
 * 班级的上课时间段
   key: `$CAMPUS:$CATEGORY:$CLASS:period`, type: string, value: 上课时间段(如果多个，只取第一个).
 
 * 课程对应的所有时间段
-  key: `$CAMPUS:$CATEGORY:periods`, type: ordered set, value: 上课时间段.
+  key: `$CAMPUS:$CATEGORY:periods`, type: ordered set, value: 上课时间段, score: 上课时间段的权重.
+  权重 = `周几*86400 + 开始小时 * 3600 + 开始分钟 * 60`
 
 * 所有学生
   key: `students`, type: ordered set, value: `$NAME:$PHONE_NUM`.
