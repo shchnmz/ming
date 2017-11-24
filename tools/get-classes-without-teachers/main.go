@@ -62,6 +62,8 @@ func FindClasses(redisServer, redisPassword string) error {
 	}
 	defer conn.Close()
 
+	// Key: teacher:classes
+	// if teacher is empty string, key'll be ":classes".
 	k := ":classes"
 	classes, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
 	if err != nil {
