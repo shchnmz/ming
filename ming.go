@@ -123,9 +123,9 @@ func (p *Processor) ClassHandler(class ming800.Class) {
 		period := class.Periods[0]
 		score := GetPeriodScore(period)
 
-		// Update SET: key: campus + category + class, value: period(1st period).
+		// Update STRING: key: campus + category + class, value: period(1st period).
 		k = fmt.Sprintf("%v:%v:%v:period", campus, category, class.Name)
-		pipedConn.Send("ZADD", k, score, period)
+		pipedConn.Send("SET", k, period)
 
 		// Update SET: key: campus + category, value: periods.
 		k = fmt.Sprintf("%v:%v:periods", campus, category)
