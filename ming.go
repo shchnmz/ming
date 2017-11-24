@@ -113,10 +113,19 @@ func (p *Processor) ClassHandler(class ming800.Class) {
 	k = fmt.Sprintf("%v:%v:classes", campus, category)
 	pipedConn.Send("ZADD", k, t, class.Name)
 
-	// Update SET: key: campus + category + class, value: teachers.
-	k = fmt.Sprintf("%v:%v:%v:teachers", campus, category, class.Name)
 	for _, teacher := range class.Teachers {
+		// Update SET: key: "teachers", value: teachers.
+		k = "teachers"
 		pipedConn.Send("ZADD", k, t, teacher)
+
+		// Update SET: key: campus + category + class, value: teachers.
+		k = fmt.Sprintf("%v:%v:%v:teachers", campus, category, class.Name)
+		pipedConn.Send("ZADD", k, t, teacher)
+
+		// Update SET: key: teacher, value: campus + category + class.
+		k = fmt.Sprintf("%v:classes", teacher)
+		v := fmt.Sprintf("%v:%v:%v", campus, category, class.Name)
+		pipedConn.Send("ZADD", k, t, v)
 	}
 
 	if len(class.Periods) >= 1 {
