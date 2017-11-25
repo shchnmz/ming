@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"path"
 
 	"github.com/garyburd/redigo/redis"
@@ -22,33 +23,41 @@ var (
 )
 
 func main() {
-	var (
-		err                    error
-		buf                    []byte
-		currentDir, configFile string
-	)
+	var err error
 
 	defer func() {
 		if err != nil {
-			fmt.Printf("%v", err)
+			log.Printf("%v", err)
 		}
 	}()
 
-	currentDir, _ = pathhelper.GetCurrentExecDir()
-	configFile = path.Join(currentDir, "config.json")
-
-	// Load Conifg
-	if buf, err = ioutil.ReadFile(configFile); err != nil {
-		err = fmt.Errorf("load config file error: %v", err)
-		return
-	}
-
-	if err = json.Unmarshal(buf, &config); err != nil {
-		err = fmt.Errorf("parse config err: %v", err)
+	if err = loadConfig("config.json", &config); err != nil {
 		return
 	}
 
 	err = FindStudents(config.RedisServer, config.RedisPassword)
+}
+
+func loadConfig(file string, config *Config) error {
+	var (
+		err        error
+		buf        []byte
+		currentDir string
+	)
+
+	currentDir, _ = pathhelper.GetCurrentExecDir()
+	file = path.Join(currentDir, file)
+
+	// Load Conifg
+	if buf, err = ioutil.ReadFile(file); err != nil {
+		return err
+	}
+
+	if err = json.Unmarshal(buf, &config); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // FindStudents find the students which are in 2 or more classes then output student's name, phone and classes.
@@ -65,7 +74,7 @@ func FindStudents(redisServer, redisPassword string) error {
 	}
 	defer conn.Close()
 
-	k := "students"
+	k := "ming:students"
 	cursor := 0
 	for {
 		if v, err = redis.Values(conn.Do("ZSCAN", k, cursor, "COUNT", 1000)); err != nil {
@@ -82,7 +91,7 @@ func FindStudents(redisServer, redisPassword string) error {
 		}
 
 		for i := 0; i < l; i += 2 {
-			key := fmt.Sprintf("%v:classes", items[i])
+			key := fmt.Sprintf("ming:%v:classes", items[i])
 			count, err := redis.Int64(conn.Do("ZCARD", key))
 			if err != nil {
 				return err
