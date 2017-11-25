@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"path"
 
 	"github.com/garyburd/redigo/redis"
@@ -22,33 +23,43 @@ var (
 )
 
 func main() {
-	var (
-		err                    error
-		buf                    []byte
-		currentDir, configFile string
-	)
+	var err error
 
 	defer func() {
 		if err != nil {
-			fmt.Printf("%v", err)
+			log.Printf("%v", err)
 		}
 	}()
 
+	if err = loadConfig("config.json", &config); err != nil {
+		return
+	}
+
+	if err = FindClasses(config.RedisServer, config.RedisPassword); err != nil {
+		return
+	}
+}
+
+func loadConfig(file string, config *Config) error {
+	var (
+		err        error
+		buf        []byte
+		currentDir string
+	)
+
 	currentDir, _ = pathhelper.GetCurrentExecDir()
-	configFile = path.Join(currentDir, "config.json")
+	file = path.Join(currentDir, file)
 
 	// Load Conifg
-	if buf, err = ioutil.ReadFile(configFile); err != nil {
-		err = fmt.Errorf("load config file error: %v", err)
-		return
+	if buf, err = ioutil.ReadFile(file); err != nil {
+		return err
 	}
 
 	if err = json.Unmarshal(buf, &config); err != nil {
-		err = fmt.Errorf("parse config err: %v", err)
-		return
+		return err
 	}
 
-	err = FindClasses(config.RedisServer, config.RedisPassword)
+	return nil
 }
 
 func FindClasses(redisServer, redisPassword string) error {
@@ -62,9 +73,7 @@ func FindClasses(redisServer, redisPassword string) error {
 	}
 	defer conn.Close()
 
-	// Key: teacher:classes
-	// if teacher is empty string, key'll be ":classes".
-	k := ":classes"
+	k := "ming::classes"
 	classes, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
 	if err != nil {
 		return err
