@@ -35,7 +35,9 @@ func main() {
 		return
 	}
 
-	err = FindPhones(config.RedisServer, config.RedisPassword)
+	if err = FindPhones(config.RedisServer, config.RedisPassword); err != nil {
+		return
+	}
 }
 
 func loadConfig(file string, config *Config) error {
