@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"path"
 
 	"github.com/garyburd/redigo/redis"
@@ -22,33 +23,43 @@ var (
 )
 
 func main() {
-	var (
-		err                    error
-		buf                    []byte
-		currentDir, configFile string
-	)
+	var err error
 
 	defer func() {
 		if err != nil {
-			fmt.Printf("%v", err)
+			log.Printf("%v", err)
 		}
 	}()
 
+	if err = loadConfig("config.json", &config); err != nil {
+		return
+	}
+
+	if err = listAllClasses(config.RedisServer, config.RedisPassword); err != nil {
+		return
+	}
+}
+
+func loadConfig(file string, config *Config) error {
+	var (
+		err        error
+		buf        []byte
+		currentDir string
+	)
+
 	currentDir, _ = pathhelper.GetCurrentExecDir()
-	configFile = path.Join(currentDir, "config.json")
+	file = path.Join(currentDir, file)
 
 	// Load Conifg
-	if buf, err = ioutil.ReadFile(configFile); err != nil {
-		err = fmt.Errorf("load config file error: %v", err)
-		return
+	if buf, err = ioutil.ReadFile(file); err != nil {
+		return err
 	}
 
 	if err = json.Unmarshal(buf, &config); err != nil {
-		err = fmt.Errorf("parse config err: %v", err)
-		return
+		return err
 	}
 
-	err = listAllClasses(config.RedisServer, config.RedisPassword)
+	return nil
 }
 
 // listAllClasses lists all classes in ming800.
@@ -63,21 +74,21 @@ func listAllClasses(redisServer, redisPassword string) error {
 	}
 	defer conn.Close()
 
-	k := "campuses"
+	k := "ming:campuses"
 	campuses, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
 	if err != nil {
 		return err
 	}
 
 	for _, campus := range campuses {
-		k = fmt.Sprintf("%v:categories", campus)
+		k = fmt.Sprintf("ming:%v:categories", campus)
 		categories, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
 		if err != nil {
 			return err
 		}
 
 		for _, category := range categories {
-			k = fmt.Sprintf("%v:%v:periods", campus, category)
+			k = fmt.Sprintf("ming:%v:%v:periods", campus, category)
 			periods, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
 			if err != nil {
 				return err
