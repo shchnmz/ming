@@ -201,8 +201,6 @@ func (p *Processor) StudentHandler(class ming800.Class, student ming800.Student)
 }
 
 // Ming2Redis sync all current campuses, categories, students data from ming800 to redis.
-// Warning: it'll do a "FLUSHDB" command to flush redis database before sync.
-// Make sure this redis db is dedicated to sync data only.
 //
 // Params:
 //     serverURL: server URL of ming800. e.g. "http://192.168.1.87:8080".
@@ -249,7 +247,6 @@ func Ming2Redis(serverURL, company, user, password, redisServer, redisPassword s
 	}
 
 	return nil
-
 }
 
 // CleanDB cleans all existing ming800 data in redis.
