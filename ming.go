@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/garyburd/redigo/redis"
 	"github.com/northbright/ming800"
 	"github.com/northbright/redishelper"
 )
@@ -97,33 +98,26 @@ func (p *Processor) ClassHandler(class ming800.Class) {
 	// Get timestamp as score for redis ordered set.
 	t := strconv.FormatInt(time.Now().UnixNano(), 10)
 
-	// Update SET: key: "campuses", value: campuses.
-	k := "campuses"
+	k := "ming:campuses"
 	pipedConn.Send("ZADD", k, t, campus)
 
-	// Update SET: key: campus, value: categories.
-	k = fmt.Sprintf("%v:categories", campus)
+	k = fmt.Sprintf("ming:%v:categories", campus)
 	pipedConn.Send("ZADD", k, t, category)
 
-	// Update SET: key: category, value: campuses.
-	k = fmt.Sprintf("%v:campuses", category)
+	k = fmt.Sprintf("ming:%v:campuses", category)
 	pipedConn.Send("ZADD", k, t, campus)
 
-	// Update SET: key: campus + category, value: classes.
-	k = fmt.Sprintf("%v:%v:classes", campus, category)
+	k = fmt.Sprintf("ming:%v:%v:classes", campus, category)
 	pipedConn.Send("ZADD", k, t, class.Name)
 
 	for _, teacher := range class.Teachers {
-		// Update SET: key: "teachers", value: teachers.
-		k = "teachers"
+		k = "ming:teachers"
 		pipedConn.Send("ZADD", k, t, teacher)
 
-		// Update SET: key: campus + category + class, value: teachers.
-		k = fmt.Sprintf("%v:%v:%v:teachers", campus, category, class.Name)
+		k = fmt.Sprintf("ming:%v:%v:%v:teachers", campus, category, class.Name)
 		pipedConn.Send("ZADD", k, t, teacher)
 
-		// Update SET: key: teacher, value: campus + category + class.
-		k = fmt.Sprintf("%v:classes", teacher)
+		k = fmt.Sprintf("ming:%v:classes", teacher)
 		v := fmt.Sprintf("%v:%v:%v", campus, category, class.Name)
 		pipedConn.Send("ZADD", k, t, v)
 	}
@@ -132,12 +126,10 @@ func (p *Processor) ClassHandler(class ming800.Class) {
 		period := class.Periods[0]
 		score := GetPeriodScore(period)
 
-		// Update STRING: key: campus + category + class, value: period(1st period).
-		k = fmt.Sprintf("%v:%v:%v:period", campus, category, class.Name)
+		k = fmt.Sprintf("ming:%v:%v:%v:period", campus, category, class.Name)
 		pipedConn.Send("SET", k, period)
 
-		// Update SET: key: campus + category, value: periods.
-		k = fmt.Sprintf("%v:%v:periods", campus, category)
+		k = fmt.Sprintf("ming:%v:%v:periods", campus, category)
 		pipedConn.Send("ZADD", k, score, period)
 	}
 
@@ -185,27 +177,22 @@ func (p *Processor) StudentHandler(class ming800.Class, student ming800.Student)
 		return
 	}
 
-	// Update SET: key: "students", value: student name + student phone num.
-	k := "students"
+	k := "ming:students"
 	v := fmt.Sprintf("%v:%v", student.Name, student.PhoneNum)
 	pipedConn.Send("ZADD", k, t, v)
 
-	// Update SET: key: student name + student contact phone num, value: campus + category + class name.
-	k = fmt.Sprintf("%v:%v:classes", student.Name, student.PhoneNum)
-	v = fmt.Sprintf("%v:%v:%v", campus, category, class.Name)
+	k = fmt.Sprintf("ming:%v:%v:classes", student.Name, student.PhoneNum)
+	v = fmt.Sprintf("ming:%v:%v:%v", campus, category, class.Name)
 	pipedConn.Send("ZADD", k, t, v)
 
-	// Update SET: key: "phones", value: student contact phone num.
-	k = "phones"
+	k = "ming:phones"
 	pipedConn.Send("ZADD", k, t, student.PhoneNum)
 
-	// Update SET: key: student contact phone num, value: student names.
-	k = fmt.Sprintf("%v:students", student.PhoneNum)
+	k = fmt.Sprintf("ming:%v:students", student.PhoneNum)
 	pipedConn.Send("ZADD", k, t, student.Name)
 
-	// Update SET: key: campus + category + class, value: student name + student contact phone num.
-	k = fmt.Sprintf("%v:%v:%v:students", campus, category, class.Name)
-	v = fmt.Sprintf("%v:%v", student.Name, student.PhoneNum)
+	k = fmt.Sprintf("ming:%v:%v:%v:students", campus, category, class.Name)
+	v = fmt.Sprintf("ming:%v:%v", student.Name, student.PhoneNum)
 	pipedConn.Send("ZADD", k, t, v)
 
 	if _, err = pipedConn.Do("EXEC"); err != nil {
@@ -244,7 +231,7 @@ func Ming2Redis(serverURL, company, user, password, redisServer, redisPassword s
 	}
 	defer conn.Close()
 
-	if _, err = conn.Do("FLUSHDB"); err != nil {
+	if err = CleanDB(redisServer, redisPassword); err != nil {
 		return err
 	}
 
@@ -259,6 +246,57 @@ func Ming2Redis(serverURL, company, user, password, redisServer, redisPassword s
 	// Logout
 	if err = s.Logout(); err != nil {
 		return fmt.Errorf("Logout() error: %v", err)
+	}
+
+	return nil
+
+}
+
+// CleanDB cleans all existing ming800 data in redis.
+// Do it before each new sync.
+func CleanDB(redisServer, redisPassword string) error {
+	var (
+		err   error
+		v     []interface{}
+		items []string
+	)
+
+	conn, err := redishelper.GetRedisConn(redisServer, redisPassword)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	pipedConn, err := redishelper.GetRedisConn(redisServer, redisPassword)
+	if err != nil {
+		return err
+	}
+	defer pipedConn.Close()
+
+	pipedConn.Send("MULTI")
+
+	pattern := `ming:*`
+	cursor := 0
+	for {
+		if v, err = redis.Values(conn.Do("SCAN", cursor, "MATCH", pattern, "COUNT", 1000)); err != nil {
+			return err
+		}
+
+		if _, err = redis.Scan(v, &cursor, &items); err != nil {
+			return err
+		}
+
+		for _, key := range items {
+			pipedConn.Send("DEL", key)
+		}
+
+		if cursor == 0 {
+			break
+		}
+	}
+
+	if _, err = pipedConn.Do("EXEC"); err != nil {
+		return err
 	}
 
 	return nil
