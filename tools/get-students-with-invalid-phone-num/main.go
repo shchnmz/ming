@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"path"
 
 	"github.com/northbright/ming800"
@@ -24,6 +25,10 @@ type App struct {
 	Config
 }
 
+var (
+	app App
+)
+
 // ClassHandler implements ming800.WalkProcessor interface.
 func (a *App) ClassHandler(class ming800.Class) {}
 
@@ -37,30 +42,17 @@ func (a *App) StudentHandler(class ming800.Class, student ming800.Student) {
 
 func main() {
 	var (
-		app                    App
-		err                    error
-		buf                    []byte
-		currentDir, configFile string
-		s                      *ming800.Session
+		err error
+		s   *ming800.Session
 	)
 
 	defer func() {
 		if err != nil {
-			fmt.Printf("%v", err)
+			log.Printf("%v", err)
 		}
 	}()
 
-	currentDir, _ = pathhelper.GetCurrentExecDir()
-	configFile = path.Join(currentDir, "config.json")
-
-	// Load Conifg
-	if buf, err = ioutil.ReadFile(configFile); err != nil {
-		err = fmt.Errorf("load config file error: %v", err)
-		return
-	}
-
-	if err = json.Unmarshal(buf, &app.Config); err != nil {
-		err = fmt.Errorf("parse config err: %v", err)
+	if err = loadConfig("config.json", &app.Config); err != nil {
 		return
 	}
 
@@ -88,4 +80,26 @@ func main() {
 		err = fmt.Errorf("Logout() error: %v", err)
 		return
 	}
+}
+
+func loadConfig(file string, config *Config) error {
+	var (
+		err        error
+		buf        []byte
+		currentDir string
+	)
+
+	currentDir, _ = pathhelper.GetCurrentExecDir()
+	file = path.Join(currentDir, file)
+
+	// Load Conifg
+	if buf, err = ioutil.ReadFile(file); err != nil {
+		return err
+	}
+
+	if err = json.Unmarshal(buf, &config); err != nil {
+		return err
+	}
+
+	return nil
 }
