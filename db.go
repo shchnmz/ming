@@ -101,6 +101,9 @@ func (db *DB) ClassHandler(class ming800.Class) {
 	k := "ming:campuses"
 	pipedConn.Send("ZADD", k, t, campus)
 
+	k = "ming:categories"
+	pipedConn.Send("ZADD", k, t, category)
+
 	k = fmt.Sprintf("ming:%v:categories", campus)
 	pipedConn.Send("ZADD", k, t, category)
 
