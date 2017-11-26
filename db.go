@@ -288,3 +288,37 @@ func (db *DB) Clear() error {
 
 	return nil
 }
+
+// GetNamesByPhoneNum searchs student names by phone number.
+func (db *DB) GetNamesByPhoneNum(phoneNum string) ([]string, error) {
+	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	if err != nil {
+		return []string{}, err
+	}
+	defer conn.Close()
+
+	k := fmt.Sprintf("ming:%v:students", phoneNum)
+	names, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
+	if err != nil {
+		return []string{}, err
+	}
+
+	return names, nil
+}
+
+// GetClassesByNameAndPhoneNum searchs classes by student name and phone number.
+func (db *DB) GetClassesByNameAndPhoneNum(name, phoneNum string) ([]string, error) {
+	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	if err != nil {
+		return []string{}, err
+	}
+	defer conn.Close()
+
+	k := fmt.Sprintf("ming:%v:%v:classes", name, phoneNum)
+	classes, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
+	if err != nil {
+		return []string{}, err
+	}
+
+	return classes, nil
+}
