@@ -98,26 +98,26 @@ func (p *Processor) ClassHandler(class ming800.Class) {
 	// Get timestamp as score for redis ordered set.
 	t := strconv.FormatInt(time.Now().UnixNano(), 10)
 
-	k := "ming:campuses"
+	k := GetKeyOfCampuses()
 	pipedConn.Send("ZADD", k, t, campus)
 
-	k = fmt.Sprintf("ming:%v:categories", campus)
+	k = GetKeyOfCampusCategories(campus)
 	pipedConn.Send("ZADD", k, t, category)
 
-	k = fmt.Sprintf("ming:%v:campuses", category)
+	k = GetKeyOfCategoryCampuses(category)
 	pipedConn.Send("ZADD", k, t, campus)
 
-	k = fmt.Sprintf("ming:%v:%v:classes", campus, category)
+	k = GetKeyOfCampusCategoryClasses(campus, category)
 	pipedConn.Send("ZADD", k, t, class.Name)
 
 	for _, teacher := range class.Teachers {
-		k = "ming:teachers"
+		k = GetKeyOfTeachers()
 		pipedConn.Send("ZADD", k, t, teacher)
 
-		k = fmt.Sprintf("ming:%v:%v:%v:teachers", campus, category, class.Name)
+		k = GetKeyOfCampusCategoryClassTeachers(campus, category, class.Name)
 		pipedConn.Send("ZADD", k, t, teacher)
 
-		k = fmt.Sprintf("ming:%v:classes", teacher)
+		k = GetKeyOfTeacherClasses(teacher)
 		v := fmt.Sprintf("%v:%v:%v", campus, category, class.Name)
 		pipedConn.Send("ZADD", k, t, v)
 	}
@@ -126,10 +126,10 @@ func (p *Processor) ClassHandler(class ming800.Class) {
 		period := class.Periods[0]
 		score := GetPeriodScore(period)
 
-		k = fmt.Sprintf("ming:%v:%v:%v:period", campus, category, class.Name)
+		k = GetKeyOfCampusCategoryClassPeriod(campus, category, class.Name)
 		pipedConn.Send("SET", k, period)
 
-		k = fmt.Sprintf("ming:%v:%v:periods", campus, category)
+		k = GetKeyOfCampusCategoryPeriods(campus, category)
 		pipedConn.Send("ZADD", k, score, period)
 	}
 
@@ -177,21 +177,21 @@ func (p *Processor) StudentHandler(class ming800.Class, student ming800.Student)
 		return
 	}
 
-	k := "ming:students"
+	k := GetKeyOfStudents()
 	v := fmt.Sprintf("%v:%v", student.Name, student.PhoneNum)
 	pipedConn.Send("ZADD", k, t, v)
 
-	k = fmt.Sprintf("ming:%v:%v:classes", student.Name, student.PhoneNum)
+	k = GetKeyOfStudentNamePhoneNumClasses(student.Name, student.PhoneNum)
 	v = fmt.Sprintf("%v:%v:%v", campus, category, class.Name)
 	pipedConn.Send("ZADD", k, t, v)
 
-	k = "ming:phones"
+	k = GetKeyOfPhoneNums()
 	pipedConn.Send("ZADD", k, t, student.PhoneNum)
 
-	k = fmt.Sprintf("ming:%v:students", student.PhoneNum)
+	k = GetKeyOfPhoneNumStudents(student.PhoneNum)
 	pipedConn.Send("ZADD", k, t, student.Name)
 
-	k = fmt.Sprintf("ming:%v:%v:%v:students", campus, category, class.Name)
+	k = GetKeyOfCampusCategoryClassStudents(campus, category, class.Name)
 	v = fmt.Sprintf("%v:%v", student.Name, student.PhoneNum)
 	pipedConn.Send("ZADD", k, t, v)
 
@@ -272,7 +272,7 @@ func CleanDB(redisServer, redisPassword string) error {
 
 	pipedConn.Send("MULTI")
 
-	pattern := `ming:*`
+	pattern := fmt.Sprintf("%v:*", RedisKeyPrefix)
 	cursor := 0
 	for {
 		if v, err = redis.Values(conn.Do("SCAN", cursor, "MATCH", pattern, "COUNT", 1000)); err != nil {
