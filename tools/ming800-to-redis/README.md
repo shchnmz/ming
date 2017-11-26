@@ -35,7 +35,7 @@ ming800-to-redis是一个用来把当前学期中课程，学生信息从明日�
   key: `ming:$NAME:$PHONE_NUM:classes`, type: ordered set, value: `$CAMPUS:$CATEGORY:$CLASS`.
 
 * 所有电话
-  key: `ming:phones`, type: ordered set, value: 联系电话.
+  key: `ming:phone_nums"`, type: ordered set, value: 联系电话.
 
 * 联系电话对应的学生
   key: `ming:$PHONE_NUM:students`, type: ordered set, value: 学生.
