@@ -352,7 +352,7 @@ func (db *DB) ValidClass(campus, category, class string) (bool, error) {
 
 	k := fmt.Sprintf("ming:%v:%v:classes", campus, category)
 	score, err := redis.String(conn.Do("ZSCORE", k, class))
-	if err != nil {
+	if err != nil && err != redis.ErrNil {
 		return false, err
 	}
 
