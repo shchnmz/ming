@@ -322,3 +322,75 @@ func (db *DB) GetClassesByNameAndPhoneNum(name, phoneNum string) ([]string, erro
 
 	return classes, nil
 }
+
+// ParseClassValue parses the value of class.
+//
+// Params:
+//     classValue: class string contains campus, category and real class.
+//                 format: $CAMPUS:$CATEGORY:$CLASS e.g. "新校区:一年级:一年级2班"
+// Returns:
+//     campus, category, real class.
+func ParseClassValue(classValue string) (string, string, string) {
+	arr := strings.SplitN(classValue, ":", 3)
+	campus := arr[0]
+	category := arr[1]
+	class := arr[2]
+
+	return campus, category, class
+}
+
+// ValidClass validates if the campus, category, class info match.
+func (db *DB) ValidClass(campus, category, class string) (bool, error) {
+	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	if err != nil {
+		return false, err
+	}
+	defer conn.Close()
+
+	k := fmt.Sprintf("ming:%v:%v:classes", campus, category)
+	score, err := redis.String(conn.Do("ZSCORE", k, class))
+	if err != nil {
+		return false, err
+	}
+
+	if score == "" {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// GetAllPeriodsOfCategory gets all category's periods for all campuses.
+//
+// Params:
+//     category: category which you want to get all periods.
+// Returns:
+//     a map contains all periods. key: campus, value: periods.
+func (db *DB) GetAllPeriodsOfCategory(category string) (map[string][]string, error) {
+	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	if err != nil {
+		return map[string][]string{}, err
+	}
+	defer conn.Close()
+
+	k := fmt.Sprintf("ming:%v:campuses", category)
+	campuses, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
+	if err != nil {
+		return map[string][]string{}, err
+	}
+
+	periodsMap := map[string][]string{}
+	for _, campus := range campuses {
+		k = fmt.Sprintf("ming:%v:%v:periods", campus, category)
+		periods, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
+		if err != nil {
+			return map[string][]string{}, err
+		}
+
+		if len(periods) > 0 {
+			periodsMap[campus] = append(periodsMap[campus], periods...)
+		}
+	}
+
+	return periodsMap, nil
+}
