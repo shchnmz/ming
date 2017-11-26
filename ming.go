@@ -185,7 +185,7 @@ func (p *Processor) StudentHandler(class ming800.Class, student ming800.Student)
 	v = fmt.Sprintf("%v:%v:%v", campus, category, class.Name)
 	pipedConn.Send("ZADD", k, t, v)
 
-	k = "ming:phones"
+	k = "ming:phone_nums"
 	pipedConn.Send("ZADD", k, t, student.PhoneNum)
 
 	k = fmt.Sprintf("ming:%v:students", student.PhoneNum)
