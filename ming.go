@@ -182,7 +182,7 @@ func (p *Processor) StudentHandler(class ming800.Class, student ming800.Student)
 	pipedConn.Send("ZADD", k, t, v)
 
 	k = fmt.Sprintf("ming:%v:%v:classes", student.Name, student.PhoneNum)
-	v = fmt.Sprintf("ming:%v:%v:%v", campus, category, class.Name)
+	v = fmt.Sprintf("%v:%v:%v", campus, category, class.Name)
 	pipedConn.Send("ZADD", k, t, v)
 
 	k = "ming:phones"
@@ -192,7 +192,7 @@ func (p *Processor) StudentHandler(class ming800.Class, student ming800.Student)
 	pipedConn.Send("ZADD", k, t, student.Name)
 
 	k = fmt.Sprintf("ming:%v:%v:%v:students", campus, category, class.Name)
-	v = fmt.Sprintf("ming:%v:%v", student.Name, student.PhoneNum)
+	v = fmt.Sprintf("%v:%v", student.Name, student.PhoneNum)
 	pipedConn.Send("ZADD", k, t, v)
 
 	if _, err = pipedConn.Do("EXEC"); err != nil {
