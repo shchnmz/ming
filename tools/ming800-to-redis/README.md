@@ -6,6 +6,9 @@ ming800-to-redis是一个用来把当前学期中课程，学生信息从明日�
 * 所有校区
   key: `"ming:campuses"`, type: ordered set, value: 校区, score: timestamp.
 
+* 所有课程
+  key: `"ming:categories"`, type: ordered set, value: 课程, score: timestamp.
+
 * 校区对应的课程
   key: `ming:$CAMPUS:categories`, type: ordered set, value: 课程, score: timestamp.
 
@@ -27,6 +30,9 @@ ming800-to-redis是一个用来把当前学期中课程，学生信息从明日�
 * 课程对应的所有时间段
   key: `ming:$CAMPUS:$CATEGORY:periods`, type: ordered set, value: 上课时间段, score: 上课时间段的权重.
   权重 = `周几*86400 + 开始小时 * 3600 + 开始分钟 * 60`
+
+* 时间段对应的班级
+  key: `ming:$CAMPUS:$CATEGORY:$PERIOD:classes`, type: ordered set, value: 班级, score: timestamp.
 
 * 所有学生
   key: `ming:students`, type: ordered set, value: `$NAME:$PHONE_NUM`.
