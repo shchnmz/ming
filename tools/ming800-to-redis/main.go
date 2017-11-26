@@ -45,5 +45,8 @@ func main() {
 		return
 	}
 
-	err = ming.Ming2Redis(config.ServerURL, config.Company, config.User, config.Password, config.RedisServer, config.RedisPassword)
+	db := ming.DB{RedisServer: config.RedisServer, RedisPassword: config.RedisPassword}
+	if err = db.SyncFromMing(config.ServerURL, config.Company, config.User, config.Password); err != nil {
+		return
+	}
 }

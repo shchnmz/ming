@@ -13,10 +13,10 @@ import (
 	"github.com/northbright/redishelper"
 )
 
-// Processor implements ming800.WalkProcessor interface.
-type Processor struct {
-	redisServer   string
-	redisPassword string
+// DB sync data from ming system.
+type DB struct {
+	RedisServer   string
+	RedisPassword string
 }
 
 // ParseCategory gets campus and real category from category string.
@@ -70,9 +70,9 @@ func GetPeriodScore(period string) int {
 	return dayScores[day]*86400 + hour*3600 + min*60
 }
 
-// ClassHandler implements ming800.WalkProcessor interface.
+// ClassHandler implements ming800.WalkDB interface.
 // It'll be called when a class is found.
-func (p *Processor) ClassHandler(class ming800.Class) {
+func (db *DB) ClassHandler(class ming800.Class) {
 	var err error
 
 	defer func() {
@@ -81,7 +81,7 @@ func (p *Processor) ClassHandler(class ming800.Class) {
 		}
 	}()
 
-	pipedConn, err := redishelper.GetRedisConn(p.redisServer, p.redisPassword)
+	pipedConn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return
 	}
@@ -138,9 +138,9 @@ func (p *Processor) ClassHandler(class ming800.Class) {
 	}
 }
 
-// StudentHandler implements ming800.WalkProcessor interface.
+// StudentHandler implements ming800.WalkDB interface.
 // It'll be called when a student is found.
-func (p *Processor) StudentHandler(class ming800.Class, student ming800.Student) {
+func (db *DB) StudentHandler(class ming800.Class, student ming800.Student) {
 	var err error
 
 	defer func() {
@@ -159,7 +159,7 @@ func (p *Processor) StudentHandler(class ming800.Class, student ming800.Student)
 	student.PhoneNum = strings.TrimRight(student.PhoneNum, `.`)
 
 	// Get another redis connection for pipelined transaction.
-	pipedConn, err := redishelper.GetRedisConn(p.redisServer, p.redisPassword)
+	pipedConn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return
 	}
@@ -200,16 +200,14 @@ func (p *Processor) StudentHandler(class ming800.Class, student ming800.Student)
 	}
 }
 
-// Ming2Redis sync all current campuses, categories, students data from ming800 to redis.
+// SyncFromMing sync data included all current campuses, categories, students from ming800 to redis.
 //
 // Params:
 //     serverURL: server URL of ming800. e.g. "http://192.168.1.87:8080".
 //     company: company or orgnization name of ming800.
 //     user: user account of ming800.
 //     password: user password of ming800.
-//     redisServer: redis server address. e.g. ":6379".
-//     redisPassword: redis server password.
-func Ming2Redis(serverURL, company, user, password, redisServer, redisPassword string) error {
+func (db *DB) SyncFromMing(serverURL, company, user, password string) error {
 	// New a session
 	s, err := ming800.NewSession(serverURL, company, user, password)
 	if err != nil {
@@ -221,23 +219,15 @@ func Ming2Redis(serverURL, company, user, password, redisServer, redisPassword s
 		return fmt.Errorf("Login() error: %v", err)
 	}
 
-	// Warnning: FLUSHDB before every sync.
-	// Make sure this redis db is used to sync ming800 data only.
-	conn, err := redishelper.GetRedisConn(redisServer, redisPassword)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	if err = CleanDB(redisServer, redisPassword); err != nil {
+	// Clear all data before sync.
+	if err = db.Clear(); err != nil {
 		return err
 	}
 
 	// Walk
 	// Write your own class and student handler functions.
 	// Class and student handler will be called while walking ming800.
-	processor := &Processor{redisServer: redisServer, redisPassword: redisPassword}
-	if err = s.Walk(processor); err != nil {
+	if err = s.Walk(db); err != nil {
 		return fmt.Errorf("Walk() error: %v", err)
 	}
 
@@ -249,22 +239,22 @@ func Ming2Redis(serverURL, company, user, password, redisServer, redisPassword s
 	return nil
 }
 
-// CleanDB cleans all existing ming800 data in redis.
+// Clear cleans all existing ming800 data in redis.
 // Do it before each new sync.
-func CleanDB(redisServer, redisPassword string) error {
+func (db *DB) Clear() error {
 	var (
 		err   error
 		v     []interface{}
 		items []string
 	)
 
-	conn, err := redishelper.GetRedisConn(redisServer, redisPassword)
+	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
 
-	pipedConn, err := redishelper.GetRedisConn(redisServer, redisPassword)
+	pipedConn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return err
 	}
