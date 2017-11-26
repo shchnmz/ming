@@ -134,6 +134,9 @@ func (db *DB) ClassHandler(class ming800.Class) {
 
 		k = fmt.Sprintf("ming:%v:%v:periods", campus, category)
 		pipedConn.Send("ZADD", k, score, period)
+
+		k = fmt.Sprintf("ming:%v:%v:%v:classes", campus, category, period)
+		pipedConn.Send("ZADD", k, score, class.Name)
 	}
 
 	if _, err = pipedConn.Do("EXEC"); err != nil {
