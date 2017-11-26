@@ -342,6 +342,22 @@ func ParseClassValue(classValue string) (string, string, string) {
 	return campus, category, class
 }
 
+// GetClassPeriod gets the period of the combination of campus, category, class.
+func (db *DB) GetClassPeriod(campus, category, class string) (string, error) {
+	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+
+	k := fmt.Sprintf("ming:%v:%v:%v:period", campus, category, class)
+	period, err := redis.String(conn.Do("GET", k))
+	if err != nil && err != redis.ErrNil {
+		return "", err
+	}
+	return period, nil
+}
+
 // ValidClass validates if the campus, category, class info match.
 func (db *DB) ValidClass(campus, category, class string) (bool, error) {
 	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
