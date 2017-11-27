@@ -382,6 +382,27 @@ func (db *DB) ValidClass(campus, category, class string) (bool, error) {
 	return true, nil
 }
 
+// ValidPeriod validates if the campus, category, period info match.
+func (db *DB) ValidPeriod(campus, category, period string) (bool, error) {
+	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	if err != nil {
+		return false, err
+	}
+	defer conn.Close()
+
+	k := fmt.Sprintf("ming:%v:%v:periods", campus, category)
+	score, err := redis.String(conn.Do("ZSCORE", k, period))
+	if err != nil && err != redis.ErrNil {
+		return false, err
+	}
+
+	if score == "" {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 // GetAllPeriodsOfCategory gets all category's periods for all campuses.
 //
 // Params:
