@@ -295,7 +295,7 @@ func (db *DB) Clear() error {
 	return nil
 }
 
-// GetNamesByPhoneNum searchs student names by phone number.
+// GetNamesByPhoneNum searches student names by phone number.
 func (db *DB) GetNamesByPhoneNum(phoneNum string) ([]string, error) {
 	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
 	if err != nil {
@@ -312,7 +312,7 @@ func (db *DB) GetNamesByPhoneNum(phoneNum string) ([]string, error) {
 	return names, nil
 }
 
-// GetClassesByNameAndPhoneNum searchs classes by student name and phone number.
+// GetClassesByNameAndPhoneNum searches classes by student name and phone number.
 func (db *DB) GetClassesByNameAndPhoneNum(name, phoneNum string) ([]string, error) {
 	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
 	if err != nil {
