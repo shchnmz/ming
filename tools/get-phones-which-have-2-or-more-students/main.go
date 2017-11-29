@@ -35,7 +35,7 @@ func main() {
 		return
 	}
 
-	if err = FindPhones(config.RedisServer, config.RedisPassword); err != nil {
+	if err = findPhones(config.RedisServer, config.RedisPassword); err != nil {
 		return
 	}
 }
@@ -55,15 +55,11 @@ func loadConfig(file string, config *Config) error {
 		return err
 	}
 
-	if err = json.Unmarshal(buf, &config); err != nil {
-		return err
-	}
-
-	return nil
+	return json.Unmarshal(buf, &config)
 }
 
-// FindPhones find the phones which have 2 or more students, then output phone number, student's names.
-func FindPhones(redisServer, redisPassword string) error {
+// findPhones find the phones which have 2 or more students, then output phone number, student's names.
+func findPhones(redisServer, redisPassword string) error {
 	var (
 		err   error
 		v     []interface{}

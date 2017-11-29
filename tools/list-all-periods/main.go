@@ -55,11 +55,7 @@ func loadConfig(file string, config *Config) error {
 		return err
 	}
 
-	if err = json.Unmarshal(buf, &config); err != nil {
-		return err
-	}
-
-	return nil
+	return json.Unmarshal(buf, &config)
 }
 
 // listAllClasses lists all classes in ming800.

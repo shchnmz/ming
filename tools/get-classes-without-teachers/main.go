@@ -35,7 +35,7 @@ func main() {
 		return
 	}
 
-	if err = FindClasses(config.RedisServer, config.RedisPassword); err != nil {
+	if err = findClasses(config.RedisServer, config.RedisPassword); err != nil {
 		return
 	}
 }
@@ -55,14 +55,10 @@ func loadConfig(file string, config *Config) error {
 		return err
 	}
 
-	if err = json.Unmarshal(buf, &config); err != nil {
-		return err
-	}
-
-	return nil
+	return json.Unmarshal(buf, &config)
 }
 
-func FindClasses(redisServer, redisPassword string) error {
+func findClasses(redisServer, redisPassword string) error {
 	var (
 		err error
 	)
