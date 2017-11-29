@@ -1,5 +1,9 @@
 # ming
 
+[![Build Status](https://travis-ci.org/shchnmz/ming.svg?branch=master)](https://travis-ci.org/shchnmz/ming)
+[![Go Report Card](https://goreportcard.com/badge/github.com/shchnmz/ming)](https://goreportcard.com/report/github.com/shchnmz/ming)
+[![GoDoc](https://godoc.org/github.com/shchnmz/ming?status.svg)](https://godoc.org/github.com/shchnmz/ming)
+
 ming是一个[Golang](https://golang.org)包，主要提供了将明日系统的数据导入至redis的功能。
 
 #### 同步后的redis中的keys
