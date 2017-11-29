@@ -14,6 +14,6 @@ list-all-classes是一个输出明日系统中所有班级的程序。它是使�
 
 * `"redis_server"`,`"redis_password"`是同步的redis的地址和密码。
 
-2. 运行`list-all-classes`
+3. 运行`list-all-classes`
 
         ./list-all-classes

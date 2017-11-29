@@ -14,6 +14,6 @@ get-phones-which-have-2-or-more-students是一个输出明日系统中一个联�
 
 * `"redis_server"`,`"redis_password"`是同步的redis的地址和密码。
 
-2. 运行`get-phones-which-have-2-or-more-students`
+3. 运行`get-phones-which-have-2-or-more-students`
 
         ./get-phones-which-have-2-or-more-students

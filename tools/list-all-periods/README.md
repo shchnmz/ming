@@ -14,6 +14,6 @@ list-all-periods是一个输出明日系统中所有课程的时间段的程序�
 
 * `"redis_server"`,`"redis_password"`是同步的redis的地址和密码。
 
-2. 运行`list-all-periods`
+3. 运行`list-all-periods`
 
         ./list-all-periods

@@ -14,6 +14,6 @@ get-classes-without-teachers是一个输出明日系统中缺失教师信息的�
 
 * `"redis_server"`,`"redis_password"`是同步的redis的地址和密码。
 
-2. 运行`get-classes-without-teachers`
+3. 运行`get-classes-without-teachers`
 
         ./get-classes-without-teachers
