@@ -10,6 +10,7 @@ import (
 	"github.com/shchnmz/ming"
 )
 
+// Config represents the app config.
 type Config struct {
 	ServerURL     string `json:"server_url"`
 	Company       string `json:"company"`
