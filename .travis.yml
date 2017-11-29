@@ -22,10 +22,10 @@ install:
 
 script:
   - go build
-  - cd tools/get-classes-without-teachers && go build && cd ../
-  - cd tools/get-phones-which-have-2-or-more-students && go build && cd ../
-  - cd tools/get-students-in-2-or-more-classes && go build && cd ../
-  - cd tools/get-students-with-invalid-phone-num && go build && ../
-  - cd tools/list-all-classes && go build && ../
-  - cd tools/list-all-periods && go build && ../
-  - cd tools/ming800-to-redis && go build && ../
+  - cd tools/get-classes-without-teachers && go build && cd ../../
+  - cd tools/get-phones-which-have-2-or-more-students && go build && cd ../../
+  - cd tools/get-students-in-2-or-more-classes && go build && cd ../../
+  - cd tools/get-students-with-invalid-phone-num && go build && ../../
+  - cd tools/list-all-classes && go build && ../../
+  - cd tools/list-all-periods && go build && ../../
+  - cd tools/ming800-to-redis && go build && ../../
