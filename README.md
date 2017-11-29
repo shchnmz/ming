@@ -66,7 +66,7 @@ ming是一个[Golang](https://golang.org)包，主要提供了将明日系统的
                 return
         } 
 
-可以参考<./tools/ming800-to-redis/main.go>.
+可以参考[tools/ming800-to-redis/](./tools/ming800-to-redis)
 
 #### Documentation
 * [API Reference](https://godoc.org/github.com/shchnmz/ming)
