@@ -403,6 +403,18 @@ func (db *DB) ValidPeriod(campus, category, period string) (bool, error) {
 	return true, nil
 }
 
+// GetTeachersOfClass gets teachers of the class.
+func (db *DB) GetTeachersOfClass(campus, category, class string) ([]string, error) {
+	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	if err != nil {
+		return []string{}, err
+	}
+	defer conn.Close()
+
+	k := fmt.Sprintf("ming:%v:%v:%v:teachers", campus, category, class)
+	return redis.Strings(conn.Do("ZRANGE", k, 0, -1))
+}
+
 // GetAllPeriodsOfCategory gets all category's periods for all campuses.
 //
 // Params:
