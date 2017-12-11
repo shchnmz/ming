@@ -449,3 +449,50 @@ func (db *DB) GetAllPeriodsOfCategory(category string) (map[string][]string, err
 
 	return periodsMap, nil
 }
+
+// GetTeachers lists all teacher names.
+func (db *DB) GetTeachers() ([]string, error) {
+	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	if err != nil {
+		return []string{}, err
+	}
+	defer conn.Close()
+
+	k := "ming:teachers"
+	return redis.Strings(conn.Do("ZRANGE", k, 0, -1))
+}
+
+// GetStudentsOfTeacher gets all students of given teacher.
+//
+// Params:
+//     teacher: name of teacher.
+// Return:
+//     students in the format: $STUDENT_NAME:$CONTACT_PHONE_NUM. e.g. 小明:13800138000
+func (db *DB) GetStudentsOfTeacher(teacher string) ([]string, error) {
+	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	if err != nil {
+		return []string{}, err
+	}
+	defer conn.Close()
+
+	k := fmt.Sprintf("ming:%v:classes", teacher)
+	classes, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
+	if err != nil {
+		return []string{}, err
+	}
+
+	allStudents := []string{}
+	for _, class := range classes {
+		k = fmt.Sprintf("ming:%v:students", class)
+		students, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
+		if err != nil {
+			return []string{}, err
+		}
+
+		if len(students) > 0 {
+			allStudents = append(allStudents, students...)
+		}
+	}
+
+	return allStudents, nil
+}
