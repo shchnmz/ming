@@ -55,7 +55,7 @@ func loadConfig(file string, config *Config) error {
 		return err
 	}
 
-	return json.Unmarshal(buf, &config)
+	return json.Unmarshal(buf, config)
 }
 
 // findPhones find the phones which have 2 or more students, then output phone number, student's names.

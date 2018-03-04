@@ -55,7 +55,7 @@ func loadConfig(file string, config *Config) error {
 		return err
 	}
 
-	return json.Unmarshal(buf, &config)
+	return json.Unmarshal(buf, config)
 }
 
 func findClasses(redisServer, redisPassword string) error {
