@@ -6,6 +6,24 @@
 
 ming是一个[Golang](https://golang.org)包，主要提供了将明日系统的数据导入至redis的功能。
 
+#### 限制
+* ming基于[ming800](https://github.com/northbright/ming800)
+* 适合单机版本且只有1个校区的版本
+
+#### 校区约定
+因为受限1个校区，所以多个校区的可以通过在"课程类别"添加校区信息的做法来实现多个校区
+
+* 课程类别命名约定
+
+          课程类别（校区）
+
+* 例子
+
+          // 括号为中文全角括号
+          四年级（校区A）
+          校区：校区A
+          类别：四年级
+
 #### 同步后的redis中的keys
 * 所有校区
   key: `"ming:campuses"`, type: ordered set, value: 校区, score: timestamp.
