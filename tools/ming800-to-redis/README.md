@@ -31,7 +31,7 @@ ming800-to-redis是一个用来把当前学期中课程，学生信息从明日�
   key: `ming:$CAMPUS:categories`, type: ordered set, value: 课程, score: timestamp.
 
 * 课程对应的校区
-  key: `ming:$CATEGORY:classes`, type: ordered set, value: 校区, score: timestamp.
+  key: `ming:$CATEGORY:campuses`, type: ordered set, value: 校区, score: timestamp.
 
 * 所有教师
   key: `"ming:teachers"`, type: ordered set, value: 教师, score: timestamp.
