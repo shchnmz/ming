@@ -34,6 +34,9 @@ ming是一个[Golang](https://golang.org)包，主要提供了将明日系统的
 * 校区对应的课程
   key: `ming:$CAMPUS:categories`, type: ordered set, value: 课程, score: timestamp.
 
+* 校区-课程对应的班级
+  key: `ming:$CAMPUS:$CATEGORY:classes`, type: ordered set, value: 班级, score: timestamp.
+
 * 课程对应的校区
   key: `ming:$CATEGORY:campuses`, type: ordered set, value: 校区, score: timestamp.
 
