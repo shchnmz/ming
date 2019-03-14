@@ -7,9 +7,8 @@ import (
 	"log"
 	"path"
 
-	"github.com/garyburd/redigo/redis"
 	"github.com/northbright/pathhelper"
-	"github.com/northbright/redishelper"
+	"github.com/shchnmz/ming"
 )
 
 // Config represents the app settings.
@@ -20,6 +19,7 @@ type Config struct {
 
 var (
 	config Config
+	db     ming.DB
 )
 
 func main() {
@@ -65,37 +65,14 @@ func listAllPeriods(redisServer, redisPassword string) error {
 		err error
 	)
 
-	conn, err := redishelper.GetRedisConn(redisServer, redisPassword)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	k := "ming:campuses"
-	campuses, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
+	db := ming.DB{config.RedisServer, config.RedisPassword}
+	periods, err := db.GetAllPeriods()
 	if err != nil {
 		return err
 	}
 
-	for _, campus := range campuses {
-		k = fmt.Sprintf("ming:%v:categories", campus)
-		categories, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
-		if err != nil {
-			return err
-		}
-
-		for _, category := range categories {
-			k = fmt.Sprintf("ming:%v:%v:periods", campus, category)
-			periods, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
-			if err != nil {
-				return err
-			}
-
-			for _, period := range periods {
-				fmt.Printf("%v:%v:%v\n", campus, category, period)
-			}
-
-		}
+	for _, period := range periods {
+		fmt.Printf("%s\n", period)
 	}
 
 	return nil

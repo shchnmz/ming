@@ -457,6 +457,48 @@ func (db *DB) GetAllClasses() ([]string, error) {
 	return allClasses, nil
 }
 
+// GetAllPeriods gets the names of all classes.
+// Return:
+// a slice contains the all periods.
+// Period name format: $campus:$category:$period.
+func (db *DB) GetAllPeriods() ([]string, error) {
+	var allPeriods []string
+
+	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	if err != nil {
+		return []string{}, err
+	}
+	defer conn.Close()
+
+	k := "ming:campuses"
+	campuses, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
+	if err != nil {
+		return []string{}, err
+	}
+
+	for _, campus := range campuses {
+		k = fmt.Sprintf("ming:%v:categories", campus)
+		categories, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
+		if err != nil {
+			return []string{}, err
+		}
+
+		for _, category := range categories {
+			k = fmt.Sprintf("ming:%v:%v:periods", campus, category)
+			periods, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
+			if err != nil {
+				return []string{}, err
+			}
+
+			for _, period := range periods {
+				allPeriods = append(allPeriods, fmt.Sprintf("%v:%v:%v", campus, category, period))
+			}
+
+		}
+	}
+	return allPeriods, nil
+}
+
 // GetAllPeriodsOfCategory gets all category's periods for all campuses.
 //
 // Params:
