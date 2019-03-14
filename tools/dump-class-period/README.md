@@ -1,6 +1,6 @@
-# list-all-periods
+# dump-class-period
 
-list-all-periods是一个输出明日系统中所有课程的时间段的程序。它是使用[Golang](https://golang.org)写的。
+dump-class-period是一个输出明日系统中所有班级对应时间段的程序。它是使用[Golang](https://golang.org)写的。
 
 #### 如何使用
 1. 确认已经运行过[ming800-to-redis](../ming800-to-redis)将明日系统的数据导入到redis中。
@@ -14,6 +14,10 @@ list-all-periods是一个输出明日系统中所有课程的时间段的程序�
 
 * `"redis_server"`,`"redis_password"`是同步的redis的地址和密码。
 
-3. 运行`list-all-periods`
+3. 运行`dump-class-period`
 
-        ./list-all-periods
+        ./dump-class-period
+
+4. 导出文件
+   * JSON: `class-period.json`
+   * CSV(使用`;`分隔，有UTF-8 BOM): `class-period-utf8-bom.csv`
