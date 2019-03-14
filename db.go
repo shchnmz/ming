@@ -415,6 +415,48 @@ func (db *DB) GetTeachersOfClass(campus, category, class string) ([]string, erro
 	return redis.Strings(conn.Do("ZRANGE", k, 0, -1))
 }
 
+// GetAllClasses gets the names of all classes.
+// Return:
+// a slice contains the names of all classes.
+// Class name format: $campus:$category:$class.
+func (db *DB) GetAllClasses() ([]string, error) {
+	var allClasses []string
+
+	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	if err != nil {
+		return []string{}, err
+	}
+	defer conn.Close()
+
+	k := "ming:campuses"
+	campuses, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
+	if err != nil {
+		return []string{}, err
+	}
+
+	for _, campus := range campuses {
+		k = fmt.Sprintf("ming:%v:categories", campus)
+		categories, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
+		if err != nil {
+			return []string{}, err
+		}
+
+		for _, category := range categories {
+			k = fmt.Sprintf("ming:%v:%v:classes", campus, category)
+			classes, err := redis.Strings(conn.Do("ZRANGE", k, 0, -1))
+			if err != nil {
+				return []string{}, err
+			}
+
+			for _, class := range classes {
+				allClasses = append(allClasses, fmt.Sprintf("%v:%v:%v", campus, category, class))
+			}
+
+		}
+	}
+	return allClasses, nil
+}
+
 // GetAllPeriodsOfCategory gets all category's periods for all campuses.
 //
 // Params:
