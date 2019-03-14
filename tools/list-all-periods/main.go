@@ -35,7 +35,7 @@ func main() {
 		return
 	}
 
-	if err = listAllClasses(config.RedisServer, config.RedisPassword); err != nil {
+	if err = listAllPeriods(config.RedisServer, config.RedisPassword); err != nil {
 		return
 	}
 }
@@ -58,8 +58,9 @@ func loadConfig(file string, config *Config) error {
 	return json.Unmarshal(buf, config)
 }
 
-// listAllClasses lists all classes in ming800.
-func listAllClasses(redisServer, redisPassword string) error {
+// listAllPeriods lists all periods in ming800.
+// Output format: $campus:$category:$period
+func listAllPeriods(redisServer, redisPassword string) error {
 	var (
 		err error
 	)
