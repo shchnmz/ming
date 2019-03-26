@@ -651,24 +651,3 @@ func (db *DB) GetAllStudents() ([]string, error) {
 
 	return allStudents, nil
 }
-
-func (db *DB) GetAllStudents() ([]string, error) {
-	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
-	if err != nil {
-		return []string{}, err
-	}
-	defer conn.Close()
-
-	allStudents := []string{}
-
-	students, err := redis.Strings(conn.Do("ZRANGE", "ming:students", 0, -1))
-	if err != nil {
-		return []string{}, err
-	}
-
-	if len(students) > 0 {
-		allStudents = append(allStudents, students...)
-	}
-
-	return allStudents, nil
-}
