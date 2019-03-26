@@ -1,0 +1,6 @@
+{
+	"redis_server":":6379",
+	"redis_password":"",
+	"input_csv_name_column_index": 6,
+	"input_csv_phone_num_column_index": 7
+}
