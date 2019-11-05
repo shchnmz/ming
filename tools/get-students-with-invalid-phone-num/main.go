@@ -30,14 +30,15 @@ var (
 )
 
 // ClassHandler implements ming800.WalkProcessor interface.
-func (a *App) ClassHandler(class ming800.Class) {}
+func (a *App) ClassHandler(class *ming800.Class) error { return nil }
 
 // StudentHandler implements ming800.WalkProcessor interface
-func (a *App) StudentHandler(class ming800.Class, student ming800.Student) {
+func (a *App) StudentHandler(class *ming800.Class, student *ming800.Student) error {
 	// Check if phone number: 11-digit or 8-digit.
 	if !ming.ValidPhoneNum(student.PhoneNum) {
 		fmt.Printf("%s,%s,%s,%s\n", class.Category, class.Name, student.Name, student.PhoneNum)
 	}
+	return nil
 }
 
 func main() {

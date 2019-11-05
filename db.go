@@ -2,7 +2,7 @@ package ming
 
 import (
 	"fmt"
-	"log"
+	//"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -72,18 +72,10 @@ func GetPeriodScore(period string) int {
 
 // ClassHandler implements ming800.WalkDB interface.
 // It'll be called when a class is found.
-func (db *DB) ClassHandler(class ming800.Class) {
-	var err error
-
-	defer func() {
-		if err != nil {
-			log.Printf("classHandler() error: %v", err)
-		}
-	}()
-
+func (db *DB) ClassHandler(class *ming800.Class) error {
 	pipedConn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
 	if err != nil {
-		return
+		return fmt.Errorf("GetRedisConn() error: %v", err)
 	}
 	defer pipedConn.Close()
 
@@ -91,8 +83,7 @@ func (db *DB) ClassHandler(class ming800.Class) {
 
 	campus, category := ParseCategory(class.Category)
 	if category == "" && campus == "" {
-		err = fmt.Errorf("Failed to parse category and campus: %v", class.Category)
-		return
+		return fmt.Errorf("Failed to parse category and campus: %v", class.Category)
 	}
 
 	// Get timestamp as score for redis ordered set.
@@ -140,25 +131,18 @@ func (db *DB) ClassHandler(class ming800.Class) {
 	}
 
 	if _, err = pipedConn.Do("EXEC"); err != nil {
-		return
+		return err
 	}
+
+	return nil
 }
 
 // StudentHandler implements ming800.WalkDB interface.
 // It'll be called when a student is found.
-func (db *DB) StudentHandler(class ming800.Class, student ming800.Student) {
-	var err error
-
-	defer func() {
-		if err != nil {
-			log.Printf("studentHandler() error: %v", err)
-		}
-	}()
-
+func (db *DB) StudentHandler(class *ming800.Class, student *ming800.Student) error {
 	// Check if phone number: 11-digit or 8-digit.
 	if !ValidPhoneNum(student.PhoneNum) {
-		fmt.Printf("%s,%s,%s,%s\n", class.Category, class.Name, student.Name, student.PhoneNum)
-		return
+		return fmt.Errorf("Invalid Phone Num: %s,%s,%s,%s\n", class.Category, class.Name, student.Name, student.PhoneNum)
 	}
 
 	// Student contact phone may have '.' suffix, remove it.
@@ -167,7 +151,7 @@ func (db *DB) StudentHandler(class ming800.Class, student ming800.Student) {
 	// Get another redis connection for pipelined transaction.
 	pipedConn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
 	if err != nil {
-		return
+		return err
 	}
 	defer pipedConn.Close()
 
@@ -179,8 +163,7 @@ func (db *DB) StudentHandler(class ming800.Class, student ming800.Student) {
 	// Get campus, category.
 	campus, category := ParseCategory(class.Category)
 	if category == "" && campus == "" {
-		err = fmt.Errorf("Failed to parse category and campus: %v", class.Category)
-		return
+		return fmt.Errorf("Failed to parse category and campus: %v", class.Category)
 	}
 
 	k := "ming:students"
@@ -202,8 +185,10 @@ func (db *DB) StudentHandler(class ming800.Class, student ming800.Student) {
 	pipedConn.Send("ZADD", k, t, v)
 
 	if _, err = pipedConn.Do("EXEC"); err != nil {
-		return
+		return err
 	}
+
+	return nil
 }
 
 // SyncFromMing sync data included all current campuses, categories, students from ming800 to redis.
