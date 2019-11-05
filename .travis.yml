@@ -18,10 +18,15 @@ install:
 
 script:
   - go build
+  - cd tools/dump-class-period && go build && cd ../../
+  - cd tools/dump-students && go build && cd ../../
+  - cd tools/find-left-students && go build && cd ../../
   - cd tools/get-classes-without-teachers && go build && cd ../../
   - cd tools/get-phones-which-have-2-or-more-students && go build && cd ../../
+  - cd tools/get-student-count-of-each-teacher && go build && cd ../../
   - cd tools/get-students-in-2-or-more-classes && go build && cd ../../
   - cd tools/get-students-with-invalid-phone-num && go build && cd ../../
   - cd tools/list-all-classes && go build && cd ../../
   - cd tools/list-all-periods && go build && cd ../../
   - cd tools/ming800-to-redis && go build && cd ../../
+  - cd tools/walk-students && go build && cd ../../
