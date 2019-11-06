@@ -7,7 +7,7 @@ import (
 	"log"
 	"path"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 	"github.com/northbright/pathhelper"
 	"github.com/northbright/redishelper"
 )

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 	"github.com/northbright/ming800"
 	"github.com/northbright/redishelper"
 )
