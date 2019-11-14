@@ -142,7 +142,8 @@ func (db *DB) ClassHandler(class *ming800.Class) error {
 func (db *DB) StudentHandler(class *ming800.Class, student *ming800.Student) error {
 	// Check if phone number: 11-digit or 8-digit.
 	if !ValidPhoneNum(student.PhoneNum) {
-		return fmt.Errorf("Invalid Phone Num: %s,%s,%s,%s\n", class.Category, class.Name, student.Name, student.PhoneNum)
+		fmt.Printf("Invalid Phone Num: %s,%s,%s,%s\n", class.Category, class.Name, student.Name, student.PhoneNum)
+		return nil
 	}
 
 	// Student contact phone may have '.' suffix, remove it.
