@@ -66,7 +66,7 @@ func findStudents(redisServer, redisPassword string) error {
 		items []string
 	)
 
-	conn, err := redishelper.GetRedisConn(redisServer, redisPassword)
+	conn, err := redishelper.Dial(redisServer, redisPassword)
 	if err != nil {
 		return err
 	}

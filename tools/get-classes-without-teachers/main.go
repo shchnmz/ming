@@ -63,7 +63,7 @@ func findClasses(redisServer, redisPassword string) error {
 		err error
 	)
 
-	conn, err := redishelper.GetRedisConn(redisServer, redisPassword)
+	conn, err := redishelper.Dial(redisServer, redisPassword)
 	if err != nil {
 		return err
 	}
