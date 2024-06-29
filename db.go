@@ -21,10 +21,10 @@ type DB struct {
 
 // ParseCategory gets campus and real category from category string.
 //
-//   Param:
-//       category: raw category string like this: 初一（中山）
-//   Return:
-//       campus, category. e.g. campus: 中山,category: 初一
+//	Param:
+//	    category: raw category string like this: 初一（中山）
+//	Return:
+//	    campus, category. e.g. campus: 中山,category: 初一
 func ParseCategory(category string) (string, string) {
 	p := `^(\S+)（(\S+)）$`
 	re := regexp.MustCompile(p)
@@ -38,9 +38,12 @@ func ParseCategory(category string) (string, string) {
 // GetPeriodScore gets the score for the period string.
 //
 // Params:
-//     period: period string. e.g. "星期一09:00-11:30".
+//
+//	period: period string. e.g. "星期一09:00-11:30".
+//
 // Return:
-//     computed score.
+//
+//	computed score.
 func GetPeriodScore(period string) int {
 	dayScores := map[string]int{
 		"一": 1,
@@ -73,9 +76,9 @@ func GetPeriodScore(period string) int {
 // ClassHandler implements ming800.WalkDB interface.
 // It'll be called when a class is found.
 func (db *DB) ClassHandler(class *ming800.Class) error {
-	pipedConn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	pipedConn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
-		return fmt.Errorf("GetRedisConn() error: %v", err)
+		return fmt.Errorf("Dial() error: %v", err)
 	}
 	defer pipedConn.Close()
 
@@ -150,7 +153,7 @@ func (db *DB) StudentHandler(class *ming800.Class, student *ming800.Student) err
 	student.PhoneNum = strings.TrimRight(student.PhoneNum, `.`)
 
 	// Get another redis connection for pipelined transaction.
-	pipedConn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	pipedConn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return err
 	}
@@ -195,10 +198,11 @@ func (db *DB) StudentHandler(class *ming800.Class, student *ming800.Student) err
 // SyncFromMing sync data included all current campuses, categories, students from ming800 to redis.
 //
 // Params:
-//     serverURL: server URL of ming800. e.g. "http://192.168.1.87:8080".
-//     company: company or orgnization name of ming800.
-//     user: user account of ming800.
-//     password: user password of ming800.
+//
+//	serverURL: server URL of ming800. e.g. "http://192.168.1.87:8080".
+//	company: company or orgnization name of ming800.
+//	user: user account of ming800.
+//	password: user password of ming800.
 func (db *DB) SyncFromMing(serverURL, company, user, password string) error {
 	// New a session
 	s, err := ming800.NewSession(serverURL, company, user, password)
@@ -240,13 +244,13 @@ func (db *DB) Clear() error {
 		items []string
 	)
 
-	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	conn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
 
-	pipedConn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	pipedConn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return err
 	}
@@ -283,7 +287,7 @@ func (db *DB) Clear() error {
 
 // GetNamesByPhoneNum searches student names by phone number.
 func (db *DB) GetNamesByPhoneNum(phoneNum string) ([]string, error) {
-	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	conn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return []string{}, err
 	}
@@ -300,7 +304,7 @@ func (db *DB) GetNamesByPhoneNum(phoneNum string) ([]string, error) {
 
 // GetClassesByNameAndPhoneNum searches classes by student name and phone number.
 func (db *DB) GetClassesByNameAndPhoneNum(name, phoneNum string) ([]string, error) {
-	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	conn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return []string{}, err
 	}
@@ -318,10 +322,13 @@ func (db *DB) GetClassesByNameAndPhoneNum(name, phoneNum string) ([]string, erro
 // ParseClassValue parses the value of class.
 //
 // Params:
-//     classValue: class string contains campus, category and real class.
-//                 format: $CAMPUS:$CATEGORY:$CLASS e.g. "新校区:一年级:一年级2班"
+//
+//	classValue: class string contains campus, category and real class.
+//	            format: $CAMPUS:$CATEGORY:$CLASS e.g. "新校区:一年级:一年级2班"
+//
 // Returns:
-//     campus, category, real class.
+//
+//	campus, category, real class.
 func ParseClassValue(classValue string) (string, string, string) {
 	arr := strings.SplitN(classValue, ":", 3)
 	campus := arr[0]
@@ -333,7 +340,7 @@ func ParseClassValue(classValue string) (string, string, string) {
 
 // GetClassPeriod gets the period of the combination of campus, category, class.
 func (db *DB) GetClassPeriod(campus, category, class string) (string, error) {
-	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	conn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return "", err
 	}
@@ -349,7 +356,7 @@ func (db *DB) GetClassPeriod(campus, category, class string) (string, error) {
 
 // ValidClass validates if the campus, category, class info match.
 func (db *DB) ValidClass(campus, category, class string) (bool, error) {
-	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	conn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return false, err
 	}
@@ -370,7 +377,7 @@ func (db *DB) ValidClass(campus, category, class string) (bool, error) {
 
 // ValidPeriod validates if the campus, category, period info match.
 func (db *DB) ValidPeriod(campus, category, period string) (bool, error) {
-	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	conn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return false, err
 	}
@@ -391,7 +398,7 @@ func (db *DB) ValidPeriod(campus, category, period string) (bool, error) {
 
 // GetTeachersOfClass gets teachers of the class.
 func (db *DB) GetTeachersOfClass(campus, category, class string) ([]string, error) {
-	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	conn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return []string{}, err
 	}
@@ -408,7 +415,7 @@ func (db *DB) GetTeachersOfClass(campus, category, class string) ([]string, erro
 func (db *DB) GetAllClasses() ([]string, error) {
 	var allClasses []string
 
-	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	conn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return []string{}, err
 	}
@@ -450,7 +457,7 @@ func (db *DB) GetAllClasses() ([]string, error) {
 func (db *DB) GetAllPeriods() ([]string, error) {
 	var allPeriods []string
 
-	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	conn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return []string{}, err
 	}
@@ -491,7 +498,7 @@ func (db *DB) GetAllPeriods() ([]string, error) {
 func (db *DB) GetClassesPeriods() (map[string]string, error) {
 	m := map[string]string{}
 
-	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	conn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return map[string]string{}, err
 	}
@@ -535,11 +542,14 @@ func (db *DB) GetClassesPeriods() (map[string]string, error) {
 // GetAllPeriodsOfCategory gets all category's periods for all campuses.
 //
 // Params:
-//     category: category which you want to get all periods.
+//
+//	category: category which you want to get all periods.
+//
 // Returns:
-//     a map contains all periods. key: campus, value: periods.
+//
+//	a map contains all periods. key: campus, value: periods.
 func (db *DB) GetAllPeriodsOfCategory(category string) (map[string][]string, error) {
-	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	conn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return map[string][]string{}, err
 	}
@@ -569,7 +579,7 @@ func (db *DB) GetAllPeriodsOfCategory(category string) (map[string][]string, err
 
 // GetTeachers lists all teacher names.
 func (db *DB) GetTeachers() ([]string, error) {
-	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	conn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return []string{}, err
 	}
@@ -582,11 +592,14 @@ func (db *DB) GetTeachers() ([]string, error) {
 // GetStudentsOfTeacher gets all students of given teacher.
 //
 // Params:
-//     teacher: name of teacher.
+//
+//	teacher: name of teacher.
+//
 // Return:
-//     students in the format: $STUDENT_NAME:$CONTACT_PHONE_NUM. e.g. 小明:13800138000
+//
+//	students in the format: $STUDENT_NAME:$CONTACT_PHONE_NUM. e.g. 小明:13800138000
 func (db *DB) GetStudentsOfTeacher(teacher string) ([]string, error) {
-	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	conn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return []string{}, err
 	}
@@ -618,7 +631,7 @@ func (db *DB) GetStudentsOfTeacher(teacher string) ([]string, error) {
 // Return:
 // Slice contains student in the format: $name:$phone_num.
 func (db *DB) GetAllStudents() ([]string, error) {
-	conn, err := redishelper.GetRedisConn(db.RedisServer, db.RedisPassword)
+	conn, err := redishelper.Dial(db.RedisServer, db.RedisPassword)
 	if err != nil {
 		return []string{}, err
 	}
